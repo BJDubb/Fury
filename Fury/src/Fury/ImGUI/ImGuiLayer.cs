@@ -177,7 +177,7 @@ namespace Fury.ImGUI
                 ImGui.Text("Renderer: " + GL.GetString(StringName.Renderer));
                 ImGui.Text("Version: " + GL.GetString(StringName.Version));
                 ImGui.Text($"Frame Time: {io.DeltaTime * 1000:F}ms");
-                ImGui.Text($"FPS: {io.DeltaTime * 1000:F}ms");
+                ImGui.Text($"FPS: {io.DeltaTime * (1000^2):F}");
                 ImGui.Separator();
                 ImGui.Text("Window Info:");
                 ImGui.Text("Title: " + app.GetWindow().Title);

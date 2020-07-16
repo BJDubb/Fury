@@ -14,8 +14,8 @@ namespace Fury
                     return new WindowsWindow();
 
                 case Core.Platform.OSX:
-                    Logger.Error("OSX not implemented");
-                    return null;
+                    return new MacOSWindow();
+
                 case Core.Platform.Linux:
                     Logger.Error("Linux not implemented");
                     return null;
