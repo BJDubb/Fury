@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Fury.Core;
 using Fury.Events;
-using Fury.Forbidden;
 using Fury.Platform.Windows;
 using Fury.Utils;
 using ImGuiNET;

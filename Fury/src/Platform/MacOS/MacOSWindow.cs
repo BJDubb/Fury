@@ -45,12 +45,12 @@ namespace Fury
 
             window.KeyDown += e =>
             {
-                data.EventCallback(new KeyPressedEvent(e.ScanCode));
+                data.EventCallback(new KeyPressedEvent((int)e.Key, e.Control, e.Alt, e.Shift));
             };
 
             window.KeyUp += e =>
             {
-                data.EventCallback(new KeyReleasedEvent(e.ScanCode));
+                data.EventCallback(new KeyReleasedEvent((int)e.Key, e.Control, e.Alt, e.Shift));
             };
 
             window.MouseDown += e =>

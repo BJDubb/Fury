@@ -5,14 +5,11 @@ namespace Sandbox
 {
     public class Sandbox : Application
     {
-        public Sandbox()
-        {
-            PushLayer(new EditorLayer());
-        }
-
         static void Main(string[] args)
         {
-            EntryPoint.CreateApplication(new Sandbox());
+            var app = EntryPoint.CreateApplication(new Sandbox());
+            app.PushLayer(new EditorLayer());
+            app.Run();
         }
     }
 

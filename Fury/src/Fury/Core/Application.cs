@@ -14,7 +14,7 @@ namespace Fury.Core
     {
         private IWindow window;
         private LayerStack layerStack = new LayerStack();
-        private ImGuiLayer imGuiLayer;
+        public ImGuiController imGui;
 
         private bool running = true;
 
@@ -30,11 +30,6 @@ namespace Fury.Core
             }
 
             window.SetEventCallback(OnEvent);
-
-            unsafe
-            {
-                imGuiLayer = new ImGuiLayer(window.Width, window.Height, window.Handle);
-            }
         }
 
         private Stopwatch gameLoopWatch = new Stopwatch();
@@ -44,9 +39,9 @@ namespace Fury.Core
             Logger.Info("Welcome to the Fury Engine!");
             Logger.Info("Platform: " + RuntimeInformation.OSDescription);
 
-            PushOverlay(imGuiLayer);
-
             GL.ClearColor(Color.Fuchsia); //OPENGL: Remove
+
+            imGui = new ImGuiController(window);
 
             gameLoopWatch.Start();
             var elapsed = gameLoopWatch.Elapsed.TotalSeconds;
@@ -55,19 +50,19 @@ namespace Fury.Core
             {
                 gameLoopWatch.Restart();
 
-                //GL.Clear(ClearBufferMask.ColorBufferBit); //OpenGL: Remove
+                GL.Clear(ClearBufferMask.ColorBufferBit); //OpenGL: Remove
 
                 foreach (Layer layer in layerStack.Layers)
                 {
                     layer.OnUpdate(elapsed);
                 }
 
-                imGuiLayer.Begin(elapsed);
+                imGui.Begin(elapsed, window);
                 foreach (Layer layer in layerStack.Layers)
                 {
                     layer.OnImGuiRender();
                 }
-                imGuiLayer.End();
+                imGui.End();
 
 
 
@@ -84,6 +79,7 @@ namespace Fury.Core
             EventDispatcher dispatcher = new EventDispatcher(e);
             dispatcher.Dispatch<WindowCloseEvent>(e, OnWindowClose);
             dispatcher.Dispatch<WindowResizeEvent>(e, OnWindowResize);
+            dispatcher.Dispatch<ConsoleLoggedEvent>(e, OnConsoleLog);
 
             foreach (Layer layer in layerStack.Layers)
             {
@@ -91,7 +87,6 @@ namespace Fury.Core
                 layer.OnEvent(e);
             }
         }
-
 
         public static Application GetApplication()
         {
@@ -105,8 +100,6 @@ namespace Fury.Core
 
         public void PushLayer(Layer layer) => layerStack.PushLayer(layer);
 
-        public void PushOverlay(Layer layer) => layerStack.PushOverlay(layer);
-
         bool OnWindowClose(WindowCloseEvent e)
         {
             running = false;
@@ -118,5 +111,23 @@ namespace Fury.Core
             GL.Viewport(0, 0, e.Width, e.Height); //OPENGL: Remove
             return false;
         }
+
+        bool OnConsoleLog(ConsoleLoggedEvent arg)
+        {
+            switch (arg.Log.Severity)
+            {
+                case Severity.Info:
+                    Logger.Info(arg.Log.Message);
+                    break;
+                case Severity.Warn:
+                    Logger.Warn(arg.Log.Message);
+                    break;
+                case Severity.Error:
+                    Logger.Error(arg.Log.Message);
+                    break;
+            }
+            return false;
+        }
     }
 }
+

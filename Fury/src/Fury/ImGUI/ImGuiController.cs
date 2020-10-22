@@ -9,14 +9,17 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Fury.Utils;
 using OpenToolkit.Mathematics;
+using Fury.Core;
+using Fury.Platform.Windows;
+using Fury.Events;
 
-namespace Fury.Forbidden
+namespace Fury.ImGUI
 {
     public class ImGuiController
     {
-        private int windowWidth;
-        private int windowHeight;
+        private IWindow window;
         private bool frameBegun;
+        private Application app;
 
         private Texture fontTexture;
         private ImGuiShader shader;
@@ -30,10 +33,9 @@ namespace Fury.Forbidden
 
         private readonly Vector2 scaleFactor = Vector2.One;
 
-        public ImGuiController(int width, int height)
+        public ImGuiController(IWindow window)
         {
-            windowWidth = width;
-            windowHeight = height;
+            this.window = window;
 
             var context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
@@ -50,7 +52,9 @@ namespace Fury.Forbidden
             CreateDeviceResources();
             SetKeyMappings();
 
-            SetPerFrameImGuiData(1f / 60f);
+            app = Application.GetApplication();
+
+            SetPerFrameImGuiData(1f / 60f, window);
 
             ImGui.NewFrame();
             frameBegun = true;
@@ -377,112 +381,56 @@ namespace Fury.Forbidden
         private static void SetKeyMappings()
         {
             ImGuiIOPtr io = ImGui.GetIO();
-            io.KeyMap[(int)ImGuiKey.Tab] = (int)OpenToolkit.Windowing.Common.Input.Key.Tab;
-            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)OpenToolkit.Windowing.Common.Input.Key.Left;
-            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)OpenToolkit.Windowing.Common.Input.Key.Right;
-            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)OpenToolkit.Windowing.Common.Input.Key.Up;
-            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)OpenToolkit.Windowing.Common.Input.Key.Down;
-            io.KeyMap[(int)ImGuiKey.PageUp] = (int)OpenToolkit.Windowing.Common.Input.Key.PageUp;
-            io.KeyMap[(int)ImGuiKey.PageDown] = (int)OpenToolkit.Windowing.Common.Input.Key.PageDown;
-            io.KeyMap[(int)ImGuiKey.Home] = (int)OpenToolkit.Windowing.Common.Input.Key.Home;
-            io.KeyMap[(int)ImGuiKey.End] = (int)OpenToolkit.Windowing.Common.Input.Key.End;
-            io.KeyMap[(int)ImGuiKey.Delete] = (int)OpenToolkit.Windowing.Common.Input.Key.Delete;
-            io.KeyMap[(int)ImGuiKey.Backspace] = (int)OpenToolkit.Windowing.Common.Input.Key.BackSpace;
-            io.KeyMap[(int)ImGuiKey.Enter] = (int)OpenToolkit.Windowing.Common.Input.Key.Enter;
-            io.KeyMap[(int)ImGuiKey.Escape] = (int)OpenToolkit.Windowing.Common.Input.Key.Escape;
-            io.KeyMap[(int)ImGuiKey.A] = (int)OpenToolkit.Windowing.Common.Input.Key.A;
-            io.KeyMap[(int)ImGuiKey.C] = (int)OpenToolkit.Windowing.Common.Input.Key.C;
-            io.KeyMap[(int)ImGuiKey.V] = (int)OpenToolkit.Windowing.Common.Input.Key.V;
-            io.KeyMap[(int)ImGuiKey.X] = (int)OpenToolkit.Windowing.Common.Input.Key.X;
-            io.KeyMap[(int)ImGuiKey.Y] = (int)OpenToolkit.Windowing.Common.Input.Key.Y;
-            io.KeyMap[(int)ImGuiKey.Z] = (int)OpenToolkit.Windowing.Common.Input.Key.Z;
+            io.KeyMap[(int)ImGuiKey.Tab] = (int)Key.Tab;
+            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)Key.Left;
+            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)Key.Right;
+            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)Key.Up;
+            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)Key.Down;
+            io.KeyMap[(int)ImGuiKey.PageUp] = (int)Key.PageUp;
+            io.KeyMap[(int)ImGuiKey.PageDown] = (int)Key.PageDown;
+            io.KeyMap[(int)ImGuiKey.Home] = (int)Key.Home;
+            io.KeyMap[(int)ImGuiKey.End] = (int)Key.End;
+            io.KeyMap[(int)ImGuiKey.Delete] = (int)Key.Delete;
+            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Key.BackSpace;
+            io.KeyMap[(int)ImGuiKey.Enter] = (int)Key.Enter;
+            io.KeyMap[(int)ImGuiKey.Escape] = (int)Key.Escape;
+            io.KeyMap[(int)ImGuiKey.A] = (int)Key.A;
+            io.KeyMap[(int)ImGuiKey.C] = (int)Key.C;
+            io.KeyMap[(int)ImGuiKey.V] = (int)Key.V;
+            io.KeyMap[(int)ImGuiKey.X] = (int)Key.X;
+            io.KeyMap[(int)ImGuiKey.Y] = (int)Key.Y;
+            io.KeyMap[(int)ImGuiKey.Z] = (int)Key.Z;
         }
 
-        private void SetPerFrameImGuiData(float deltaTime)
+        private void SetPerFrameImGuiData(float deltaTime, IWindow window)
         {
             var io = ImGui.GetIO();
-            io.DisplaySize = new System.Numerics.Vector2(windowWidth / scaleFactor.X, windowHeight / scaleFactor.Y);
-            io.DisplayFramebufferScale = new System.Numerics.Vector2(scaleFactor.X, scaleFactor.Y);
+            io.DisplaySize = new Math.Vector2(window.Width / 1, window.Height/ 1);
+            io.DisplayFramebufferScale = new Math.Vector2(1);
             if (deltaTime == 0) Console.WriteLine("Error");
             io.DeltaTime = deltaTime;
         }
 
-        public void WindowResized(int width, int height)
-        {
-            windowWidth = width;
-            windowHeight = height;
-        }
-
-        public void Update(NativeWindow window, float deltaTime)
+        public void Begin(double deltaTime, IWindow window)
         {
             if (frameBegun)
                 ImGui.Render();
 
-            SetPerFrameImGuiData(deltaTime);
-            UpdateImGuiInput(window);
+            SetPerFrameImGuiData((float)deltaTime, window);
 
-            frameBegun = true;
             ImGui.NewFrame();
+            frameBegun = true;
         }
 
-        public void Render()
+        public void End()
         {
             if (frameBegun)
             {
                 frameBegun = false;
 
-                ImGui.ShowDemoWindow();
-
                 ImGui.Render();
                 RenderImDrawData(ImGui.GetDrawData());
             }
-        }
-
-        private MouseState PrevMouseState;
-        private KeyboardState PrevKeyboardState;
-        private readonly List<char> PressedChars = new List<char>();
-
-        private void UpdateImGuiInput(NativeWindow window)
-        {
-            ImGuiIOPtr io = ImGui.GetIO();
-
-            MouseState MouseState = window.MouseState;
-            KeyboardState KeyboardState = window.KeyboardState;
-
-            io.MouseDown[0] = MouseState.IsButtonDown(MouseButton.Left);
-            io.MouseDown[1] = MouseState.IsButtonDown(MouseButton.Right);
-            io.MouseDown[2] = MouseState.IsButtonDown(MouseButton.Middle);
-
-            var screenPoint = new Vector2i((int)MouseState.X, (int)MouseState.Y);
-            var point = window.PointToClient(screenPoint);
-            io.MousePos = new System.Numerics.Vector2(point.X, point.Y);
-
-            //io.MouseWheel = 
-            //io.MouseWheelH = MouseState
-
-            //foreach (Key key in Enum.GetValues(typeof(Key)))
-            //{
-            //    io.KeysDown[(int)key] = KeyboardState.IsKeyDown(key);
-            //}
-
-            foreach (var c in PressedChars)
-            {
-                io.AddInputCharacter(c);
-            }
-            PressedChars.Clear();
-
-            io.KeyCtrl = KeyboardState.IsKeyDown(Key.ControlLeft) || KeyboardState.IsKeyDown(Key.ControlRight);
-            io.KeyAlt = KeyboardState.IsKeyDown(Key.AltLeft) || KeyboardState.IsKeyDown(Key.AltRight);
-            io.KeyShift = KeyboardState.IsKeyDown(Key.ShiftLeft) || KeyboardState.IsKeyDown(Key.ShiftRight);
-            io.KeySuper = KeyboardState.IsKeyDown(Key.WinLeft) || KeyboardState.IsKeyDown(Key.WinRight);
-
-            PrevMouseState = MouseState;
-            PrevKeyboardState = KeyboardState;
-        }
-
-        public void KeyPress(char key)
-        {
-            PressedChars.Add(key);
         }
 
         private void RenderImDrawData(ImDrawDataPtr data)
@@ -561,7 +509,7 @@ namespace Fury.Forbidden
 
                         // We do _windowHeight - (int)clip.W instead of (int)clip.Y because gl has flipped Y when it comes to these coordinates
                         var clip = pcmd.ClipRect;
-                        GL.Scissor((int)clip.X, windowHeight - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
+                        GL.Scissor((int)clip.X, window.Height - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
 
                         if ((io.BackendFlags & ImGuiBackendFlags.RendererHasVtxOffset) != 0)
                         {

@@ -13,7 +13,7 @@ namespace Fury.Events
             None = 0,
             WindowCreated, WindowClosed, WindowResized, WindowFocused, WindowUnfocused, WindowMoved,
             ConsoleLogged,
-            KeyPressed, KeyReleased,
+            KeyPressed, KeyReleased, TextInput,
             MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
         }
 

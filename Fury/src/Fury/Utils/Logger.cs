@@ -12,7 +12,6 @@ namespace Fury.Utils
 
         public static void Info(string msg)
         {
-            Application.GetApplication()?.OnEvent(new ConsoleLoggedEvent(new Log(msg, Severity.Info)));
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write(DateTime.Now.ToString(format));
             Console.Write(" [INFO] ");
@@ -22,7 +21,6 @@ namespace Fury.Utils
 
         public static void Warn(string msg)
         {
-            Application.GetApplication()?.OnEvent(new ConsoleLoggedEvent(new Log(msg, Severity.Warn)));
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write(DateTime.Now.ToString(format));
             Console.ForegroundColor = ConsoleColor.DarkYellow;
@@ -34,8 +32,6 @@ namespace Fury.Utils
 
         public static void Error(string msg)
         {
-
-            Application.GetApplication()?.OnEvent(new ConsoleLoggedEvent(new Log(msg, Severity.Error)));
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write(DateTime.Now.ToString(format));
             Console.ForegroundColor = ConsoleColor.Red;

@@ -4,10 +4,10 @@
     {
         public static Application app;
 
-        public static void CreateApplication(Application application)
+        public static Application CreateApplication(Application application)
         {
             app = application;
-            app.Run();
+            return app;
         }
     }
 }
