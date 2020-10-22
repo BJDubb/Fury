@@ -2,6 +2,7 @@
 using OpenToolkit.Windowing.GraphicsLibraryFramework;
 using System;
 using System.Runtime.InteropServices;
+using Fury.Core;
 using Fury.Events;
 using Fury.Platform.Windows;
 using OpenToolkit.Graphics.OpenGL4;
@@ -97,6 +98,11 @@ namespace Fury
         public unsafe void SwapBuffers()
         {
             GLFW.SwapBuffers(window.WindowPtr);
+        }
+
+        public void Dispose()
+        {
+            window.Dispose();
         }
 
         public struct WindowData

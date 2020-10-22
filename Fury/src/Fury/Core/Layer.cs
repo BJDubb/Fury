@@ -1,6 +1,6 @@
 ﻿using Fury.Events;
 
-namespace Fury
+namespace Fury.Core
 {
     public class Layer
     {

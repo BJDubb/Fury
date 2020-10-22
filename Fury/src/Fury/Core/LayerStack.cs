@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Fury
+namespace Fury.Core
 {
     public class LayerStack
     {

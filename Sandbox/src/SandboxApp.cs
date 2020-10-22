@@ -1,5 +1,5 @@
 ﻿using System.Buffers.Text;
-using Fury;
+using Fury.Core;
 
 namespace Sandbox
 {
@@ -7,7 +7,7 @@ namespace Sandbox
     {
         public Sandbox()
         {
-            PushLayer(new Layer());
+            PushLayer(new EditorLayer());
         }
 
         static void Main(string[] args)

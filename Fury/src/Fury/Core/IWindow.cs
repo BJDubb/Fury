@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Fury.Events;
 
-namespace Fury
+namespace Fury.Core
 {
     public interface IWindow
     {
@@ -13,7 +13,8 @@ namespace Fury
         public string Title { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
-        public unsafe void* Handle { get; } 
+        public unsafe void* Handle { get; }
+        public void Dispose();
         void SetEventCallback(Action<Event> onEvent);
     }
 

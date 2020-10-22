@@ -8,7 +8,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using OpenToolkit.Windowing.Desktop;
 
-namespace Fury
+namespace Fury.Core
 {
     public class Application
     {
@@ -55,7 +55,7 @@ namespace Fury
             {
                 gameLoopWatch.Restart();
 
-                GL.Clear(ClearBufferMask.ColorBufferBit); //OpenGL: Remove
+                //GL.Clear(ClearBufferMask.ColorBufferBit); //OpenGL: Remove
 
                 foreach (Layer layer in layerStack.Layers)
                 {

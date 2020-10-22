@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Fury.Core;
 using Fury.Events;
 using Fury.Forbidden;
 using Fury.Platform.Windows;
@@ -177,12 +178,14 @@ namespace Fury.ImGUI
                 ImGui.Text("Renderer: " + GL.GetString(StringName.Renderer));
                 ImGui.Text("Version: " + GL.GetString(StringName.Version));
                 ImGui.Text($"Frame Time: {io.DeltaTime * 1000:F}ms");
-                ImGui.Text($"FPS: {io.DeltaTime * (1000^2):F}");
+                ImGui.Text($"FPS: {1 / io.DeltaTime:F}");
                 ImGui.Separator();
                 ImGui.Text("Window Info:");
                 ImGui.Text("Title: " + app.GetWindow().Title);
                 ImGui.Text("Width: " + app.GetWindow().Width);
                 ImGui.Text("Height: " + app.GetWindow().Height);
+                ImGui.Separator();
+                ImGui.Text("Object Loader:");
                 ImGui.Separator();
                 ImGui.End();
             }
@@ -299,9 +302,9 @@ namespace Fury.ImGUI
 
     #region GL Specific Initialization
 
-        public class ImGuiShader : ImGuiController.Shader
+        public class ImGuiShader : Shader
         {
-            public ImGuiShader(string fragmentPath, string vertexPath, ImGuiController.ShaderSource source) : base(fragmentPath, vertexPath, source)
+            public ImGuiShader(string fragmentPath, string vertexPath, ShaderSource source) : base(fragmentPath, vertexPath, source)
             {
             }
 
@@ -327,16 +330,16 @@ namespace Fury.ImGUI
             public int VertexShaderID => vertexShaderID;
             public int FragmentShaderID => fragmentShaderID;
 
-            protected Shader(string fragment, string vertex, ImGuiController.ShaderSource source)
+            protected Shader(string fragment, string vertex, ShaderSource source)
             {
-                if (source == ImGuiController.ShaderSource.Path)
+                if (source == ShaderSource.Path)
                 {
                     fragmentPath = fragment;
                     vertexPath = vertex;
 
                     BuildShaderFromFile();
                 }
-                else if (source == ImGuiController.ShaderSource.Source)
+                else if (source == ShaderSource.Source)
                 {
                     BuildShaderFromSource(fragment, vertex);
                 }
@@ -535,13 +538,19 @@ namespace Fury.ImGUI
         private void CreateGLResources()
         {
             GL.CreateVertexArrays(1, out vertexArray);
+            //vertexArray = GL.GenVertexArray();
+            //GL.BindBuffer(BufferTarget.ArrayBuffer, vertexArray);
 
             vertexBufferSize = 10000;
             indexBufferSize = 2000;
 
             GL.CreateBuffers(1, out vertexBuffer);
             GL.CreateBuffers(1, out indexBuffer);
+            //vertexBuffer = GL.GenBuffer();
+            //indexBuffer = GL.GenBuffer();
 
+            //GL.BufferData(BufferTarget.ArrayBuffer, vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            //GL.BufferData(BufferTarget.ArrayBuffer, indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
             GL.NamedBufferData(vertexBuffer, vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
             GL.NamedBufferData(indexBuffer, indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
@@ -577,7 +586,7 @@ namespace Fury.ImGUI
                 }
             ";
 
-            shader = new ImGuiShader(FragmentSource, VertexSource, ImGuiController.ShaderSource.Source);
+            shader = new ImGuiShader(FragmentSource, VertexSource, ShaderSource.Source);
 
             GL.VertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, IntPtr.Zero, Unsafe.SizeOf<ImDrawVert>());
             GL.VertexArrayElementBuffer(vertexArray, indexBuffer);

@@ -1,8 +1,11 @@
 ﻿using Fury.Utils;
+
+using ImGuiNET;
+
 using System;
 using System.Runtime.InteropServices;
 
-namespace Fury
+namespace Fury.Core
 {
     public class WindowFactory
     {
