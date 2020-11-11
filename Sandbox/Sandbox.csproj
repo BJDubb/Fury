@@ -5,6 +5,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
   <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  <StartupObject></StartupObject>
+  <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -14,13 +16,27 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutputPath>bin\$(Configuration)-$(Platform)\$(AssemblyName)</OutputPath>
+    <OutputPath>bin\Debug-x64\</OutputPath>
     <DefineConstants>TRACE;FURY_PLATFORM_WINDOWS;DEBUG;NETCOREAPP;NETCOREAPP3_1</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoStdLib>false</NoStdLib>
     <WarningLevel>4</WarningLevel>
     <Optimize>true</Optimize>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Shaders\fragment.glsl" />
+    <None Remove="Assets\Shaders\vertex.glsl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\Shaders\fragment.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Shaders\vertex.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Fury\Fury.csproj" />

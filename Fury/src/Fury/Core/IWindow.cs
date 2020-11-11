@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Text;
 using Fury.Events;
 
-namespace Fury.Core
+namespace Fury
 {
     public interface IWindow
     {
         public void OnUpdate();
-        public void SwapBuffers();
         public object GetNativeWindow();
         public string Title { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
+        public int Width { get; }
+        public int Height { get; }
+        public bool Minimised { get; }
         public unsafe void* Handle { get; }
         public void Dispose();
         void SetEventCallback(Action<Event> onEvent);

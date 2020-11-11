@@ -1,22 +1,18 @@
-﻿using OpenToolkit.Windowing.Desktop;
-using OpenToolkit.Windowing.GraphicsLibraryFramework;
+﻿using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using System;
-using System.Runtime.InteropServices;
-using Fury.Core;
 using Fury.Events;
-using Fury.Platform.Windows;
-using OpenToolkit.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL4;
+using ImGuiNET;
 
 namespace Fury
 {
-    public class WindowsWindow : IWindow
+    public class WindowsWindow : NativeWindow, IWindow
     {
         private WindowData data;
-        private GLFWWindow window;
 
         public WindowsWindow() : this(WindowProperties.Default) { }
-
-        public WindowsWindow(WindowProperties props)
+        public WindowsWindow(WindowProperties props) : base(NativeWindowSettings.Default)
         {
             Init(props);
         }
@@ -27,72 +23,75 @@ namespace Fury
             data.Width = props.Width;
             data.Height = props.Height;
 
-            window = new GLFWWindow(NativeWindowSettings.Default) { Title = props.Title, Size = new OpenToolkit.Mathematics.Vector2i(props.Width, props.Height)};
+            Title = props.Title;
+            Size = new OpenTK.Mathematics.Vector2i(props.Width, props.Height);
+
             GL.Viewport(0, 0, Width, Height);
 
-            window.Resize += e =>
+            Resize += e =>
             {
                 data.Width = e.Width;
                 data.Height = e.Height;
                 data.EventCallback(new WindowResizeEvent(e.Width, e.Height));
             };
 
-            window.Closing += e =>
+            Closing += e =>
             {
                 data.EventCallback(new WindowCloseEvent());
             };
 
-            window.KeyDown += e =>
+            KeyDown += e =>
             {
                 data.EventCallback(new KeyPressedEvent((int)e.Key, e.Control, e.Alt, e.Shift));
             };
 
-            window.KeyUp += e =>
+            KeyUp += e =>
             {
                 data.EventCallback(new KeyReleasedEvent((int)e.Key, e.Control, e.Alt, e.Shift));
             };
 
-            window.TextInput += e =>
+            TextInput += e =>
             {
                 data.EventCallback(new TextInputEvent(e.Unicode));
             };
 
-            window.MouseDown += e =>
+            MouseDown += e =>
             {
                 data.EventCallback(new MouseButtonPressedEvent(e.Button));
             };
 
-            window.MouseUp += e =>
+            MouseUp += e =>
             {
                 data.EventCallback(new MouseButtonReleasedEvent(e.Button));
             };
 
-            window.MouseWheel += e =>
+            MouseWheel += e =>
             {
                 data.EventCallback(new MouseScrolledEvent(e.OffsetX, e.OffsetY));
             };
 
-            window.MouseMove += e =>
+            MouseMove += e =>
             {
                 data.EventCallback(new MouseMovedEvent(e.X, e.Y));
             };
         }
 
-
-        public object GetNativeWindow()
-        {
-            return window;
-        }
-
-        public string Title { get => data.Title; set => data.Title = value; }
         public int Width { get => data.Width; set => data.Width = value; }
         public int Height { get => data.Height; set => data.Height = value; }
+        public bool Minimised => WindowState == OpenTK.Windowing.Common.WindowState.Minimized;
 
-        public unsafe void* Handle => window.WindowPtr;
+        public unsafe void* Handle => WindowPtr;
 
         public void OnUpdate()
         {
-            window.ProcessEvents();
+            if (lastVSync != VSync)
+            {
+                GLFW.SwapInterval(VSync ? 1 : 0);
+                lastVSync = VSync;
+            }
+
+            ProcessEvents();
+            unsafe { GLFW.SwapBuffers(WindowPtr); }
         }
 
         public void SetEventCallback(Action<Event> callback)
@@ -100,15 +99,13 @@ namespace Fury
             data.EventCallback = callback;
         }
 
-        public unsafe void SwapBuffers()
+        public object GetNativeWindow()
         {
-            GLFW.SwapBuffers(window.WindowPtr);
+            return this;
         }
 
-        public void Dispose()
-        {
-            window.Dispose();
-        }
+        private bool lastVSync;
+        public bool VSync = false;
 
         public struct WindowData
         {

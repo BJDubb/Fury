@@ -1,22 +1,22 @@
-﻿using Fury.Events;
+﻿using Fury;
+using Fury.Events;
 using Fury.ImGUI;
 using Fury.Utils;
-using OpenToolkit.Graphics.OpenGL4;
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using OpenToolkit.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using Fury.Rendering;
 
-namespace Fury.Core
+namespace Fury
 {
     public class Application
     {
         private IWindow window;
         private LayerStack layerStack = new LayerStack();
-        public ImGuiController imGui;
 
         private bool running = true;
+        double lastFrameTime;
 
         public Application()
         {
@@ -32,50 +32,44 @@ namespace Fury.Core
             window.SetEventCallback(OnEvent);
         }
 
-        private Stopwatch gameLoopWatch = new Stopwatch();
-
         public void Run()
         {
             Logger.Info("Welcome to the Fury Engine!");
             Logger.Info("Platform: " + RuntimeInformation.OSDescription);
 
-            GL.ClearColor(Color.Fuchsia); //OPENGL: Remove
+            Renderer.SetClearColor(Color.Black.ToVec4());
 
-            imGui = new ImGuiController(window);
-
-            gameLoopWatch.Start();
-            var elapsed = gameLoopWatch.Elapsed.TotalSeconds;
+            ImGuiController.Init(window);
 
             while (running)
             {
-                gameLoopWatch.Restart();
+                double time = GLFW.GetTime();
+                float elapsed = (float)(time - lastFrameTime);
+                Time.deltaTime = elapsed;
+                lastFrameTime = time;
 
-                GL.Clear(ClearBufferMask.ColorBufferBit); //OpenGL: Remove
-
-                foreach (Layer layer in layerStack.Layers)
+                if (!window.Minimised)
                 {
-                    layer.OnUpdate(elapsed);
+
+                    foreach (Layer layer in layerStack.Layers)
+                    {
+                        layer.OnUpdate();
+                    }
+
+                    ImGuiController.Begin(window);
+                    foreach (Layer layer in layerStack.Layers)
+                    {
+                        layer.OnImGuiRender();
+                    }
+                    ImGuiController.End();
                 }
-
-                imGui.Begin(elapsed, window);
-                foreach (Layer layer in layerStack.Layers)
-                {
-                    layer.OnImGuiRender();
-                }
-                imGui.End();
-
-
 
                 window.OnUpdate();
-                window.SwapBuffers();
-
-                elapsed = gameLoopWatch.Elapsed.TotalSeconds;
             }
         }
 
         public void OnEvent(Event e)
         {
-            //Logger.Info($"[APP] {e.GetType().Name}: {e.ToString()}");
             EventDispatcher dispatcher = new EventDispatcher(e);
             dispatcher.Dispatch<WindowCloseEvent>(e, OnWindowClose);
             dispatcher.Dispatch<WindowResizeEvent>(e, OnWindowResize);
@@ -108,7 +102,7 @@ namespace Fury.Core
 
         bool OnWindowResize(WindowResizeEvent e)
         {
-            GL.Viewport(0, 0, e.Width, e.Height); //OPENGL: Remove
+            Renderer.Resize(0, 0, e.Width, e.Height);
             return false;
         }
 

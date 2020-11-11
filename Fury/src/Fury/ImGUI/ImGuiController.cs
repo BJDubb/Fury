@@ -1,50 +1,49 @@
 ﻿using ImGuiNET;
-using OpenToolkit.Graphics.OpenGL4;
-using OpenToolkit.Windowing.Common.Input;
-using OpenToolkit.Windowing.Desktop;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.Common.Input;
+using OpenTK.Windowing.Desktop;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Fury.Utils;
-using OpenToolkit.Mathematics;
-using Fury.Core;
-using Fury.Platform.Windows;
-using Fury.Events;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using System.Runtime.InteropServices;
+using Fury.Rendering;
 
 namespace Fury.ImGUI
 {
-    public class ImGuiController
+    public static class ImGuiController
     {
-        private IWindow window;
-        private bool frameBegun;
-        private Application app;
+        private static IWindow window;
+        private static bool frameBegun;
+        private static Application app;
 
-        private Texture fontTexture;
-        private ImGuiShader shader;
+        private static Texture fontTexture;
+        private static Shader shader;
 
-        private int vertexArray;
-        private int vertexBuffer;
-        private int indexBuffer;
+        private static VertexArray vertexArray;
+        private static VertexBuffer vertexBuffer;
+        private static IndexBuffer indexBuffer;
 
-        private int vertexBufferSize;
-        private int indexBufferSize;
+        private static int vertexBufferSize;
+        private static int indexBufferSize;
 
-        private readonly Vector2 scaleFactor = Vector2.One;
-
-        public ImGuiController(IWindow window)
+        public static void Init(IWindow wnd)
         {
-            this.window = window;
+            window = wnd;
 
             var context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
 
             var io = ImGui.GetIO();
-            io.Fonts.AddFontDefault();
+            var font = io.Fonts.AddFontFromFileTTF(@"C:\Windows\Fonts\segoeui.ttf", 18);
+            io.Fonts.AddFontDefault(font.ConfigData);
 
-            io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset | ImGuiBackendFlags.HasMouseCursors;
-            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable | ImGuiConfigFlags.ViewportsEnable;
+            io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
+            io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.DockingEnable;
 
             io.ConfigWindowsMoveFromTitleBarOnly = true;
             io.ConfigWindowsResizeFromEdges = true;
@@ -54,24 +53,31 @@ namespace Fury.ImGUI
 
             app = Application.GetApplication();
 
-            SetPerFrameImGuiData(1f / 60f, window);
+            SetPerFrameImGuiData(0, window);
 
             ImGui.NewFrame();
             frameBegun = true;
         }
 
-        private void CreateDeviceResources()
+
+
+        private static void CreateDeviceResources()
         {
-            GL.CreateVertexArrays(1, out vertexArray);
+            vertexArray = new VertexArray();
 
             vertexBufferSize = 10000;
             indexBufferSize = 2000;
 
-            GL.CreateBuffers(1, out vertexBuffer);
-            GL.CreateBuffers(1, out indexBuffer);
+            //GL.CreateBuffers(1, out vertexBuffer);
 
-            GL.NamedBufferData(vertexBuffer, vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-            GL.NamedBufferData(indexBuffer, indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            vertexBuffer = new VertexBuffer(vertexBufferSize);
+
+            indexBuffer = new IndexBuffer(indexBufferSize);
+
+            //GL.CreateBuffers(1, out indexBuffer);
+
+            //GL.NamedBufferData(vertexBuffer, vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            //GL.NamedBufferData(indexBuffer, indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
             RecreateFontDeviceTexture();
 
@@ -105,221 +111,55 @@ namespace Fury.ImGUI
                 }
             ";
 
-            shader = new ImGuiShader(FragmentSource, VertexSource, ShaderSource.Source);
+            shader = new Shader(VertexSource, FragmentSource, false);
 
-            GL.VertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, IntPtr.Zero, Unsafe.SizeOf<ImDrawVert>());
-            GL.VertexArrayElementBuffer(vertexArray, indexBuffer);
+            // Old Code
 
-            GL.EnableVertexArrayAttrib(vertexArray, 0);
-            GL.VertexArrayAttribBinding(vertexArray, 0, 0);
-            GL.VertexArrayAttribFormat(vertexArray, 0, 2, VertexAttribType.Float, false, 0);
+            //GL.VertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, IntPtr.Zero, Unsafe.SizeOf<ImDrawVert>());
+            //GL.VertexArrayElementBuffer(vertexArray, indexBuffer);
 
-            GL.EnableVertexArrayAttrib(vertexArray, 1);
-            GL.VertexArrayAttribBinding(vertexArray, 1, 0);
-            GL.VertexArrayAttribFormat(vertexArray, 1, 2, VertexAttribType.Float, false, 8);
+            //GL.EnableVertexArrayAttrib(vertexArray, 0);
+            //GL.VertexArrayAttribBinding(vertexArray, 0, 0);
+            //GL.VertexArrayAttribFormat(vertexArray, 0, 2, VertexAttribType.Float, false, 0);
 
-            GL.EnableVertexArrayAttrib(vertexArray, 2);
-            GL.VertexArrayAttribBinding(vertexArray, 2, 0);
-            GL.VertexArrayAttribFormat(vertexArray, 2, 4, VertexAttribType.UnsignedByte, true, 16);
+            //GL.EnableVertexArrayAttrib(vertexArray, 1);
+            //GL.VertexArrayAttribBinding(vertexArray, 1, 0);
+            //GL.VertexArrayAttribFormat(vertexArray, 1, 2, VertexAttribType.Float, false, 8);
+
+            //GL.EnableVertexArrayAttrib(vertexArray, 2);
+            //GL.VertexArrayAttribBinding(vertexArray, 2, 0);
+            //GL.VertexArrayAttribFormat(vertexArray, 2, 4, VertexAttribType.UnsignedByte, true, 16);
+
+
+            // New Code
+
+            vertexArray.Bind();
+
+            //vertexBuffer.Bind();
+            //indexBuffer.Bind();
+
+            BufferLayout layout = new BufferLayout(
+                    new BufferElement("position", ShaderDataType.Float2, false),
+                    new BufferElement("texCoords", ShaderDataType.Float2, false),
+                    new BufferElement("color", ShaderDataType.UnsignedByte4, true)
+                );
+
+            vertexBuffer.SetLayout(layout);
+
+            vertexArray.AddVertexBuffer(vertexBuffer);
+            vertexArray.SetIndexBuffer(indexBuffer);
+
+            //GL.EnableVertexAttribArray(0);
+            //GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Unsafe.SizeOf<ImDrawVert>(), 0);
+            //
+            //GL.EnableVertexAttribArray(1);
+            //GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Unsafe.SizeOf<ImDrawVert>(), 8);
+            //
+            //GL.EnableVertexAttribArray(2);
+            //GL.VertexAttribPointer(2, 4, VertexAttribPointerType.UnsignedByte, true, Unsafe.SizeOf<ImDrawVert>(), 16);
         }
 
-        public class ImGuiShader : Shader
-        {
-            public ImGuiShader(string fragmentPath, string vertexPath, ShaderSource source) : base(fragmentPath, vertexPath, source)
-            {
-            }
-
-            protected override void GetUniformLocations()
-            {
-            }
-
-            protected override void BindAttributes()
-            {
-            }
-        }
-
-        public abstract class Shader : IDisposable
-        {
-            private readonly string fragmentPath;
-            private readonly string vertexPath;
-
-            private int programID;
-            private int vertexShaderID;
-            private int fragmentShaderID;
-
-            public int ProgramID => programID;
-            public int VertexShaderID => vertexShaderID;
-            public int FragmentShaderID => fragmentShaderID;
-
-            protected Shader(string fragment, string vertex, ShaderSource source)
-            {
-                if (source == ShaderSource.Path)
-                {
-                    fragmentPath = fragment;
-                    vertexPath = vertex;
-
-                    BuildShaderFromFile();
-                }
-                else if (source == ShaderSource.Source)
-                {
-                    BuildShaderFromSource(fragment, vertex);
-                }
-
-            }
-
-            public void Bind()
-            {
-                GL.UseProgram(ProgramID);
-            }
-
-            public void Unbind()
-            {
-                GL.UseProgram(0);
-            }
-
-            private void BuildShaderFromFile()
-            {
-                vertexShaderID = LoadShader(vertexPath, ShaderType.VertexShader);
-                fragmentShaderID = LoadShader(fragmentPath, ShaderType.FragmentShader);
-
-                programID = GL.CreateProgram();
-
-                GL.AttachShader(programID, vertexShaderID);
-                GL.AttachShader(programID, fragmentShaderID);
-
-                BindAttributes();
-
-                GL.LinkProgram(programID);
-                GL.ValidateProgram(programID);
-
-                GetUniformLocations();
-            }
-
-            private void BuildShaderFromSource(string fragment, string vertex)
-            {
-                vertexShaderID = CompileShader(vertex, ShaderType.VertexShader);
-                fragmentShaderID = CompileShader(fragment, ShaderType.FragmentShader);
-
-                programID = GL.CreateProgram();
-
-                GL.AttachShader(programID, vertexShaderID);
-                GL.AttachShader(programID, fragmentShaderID);
-
-                BindAttributes();
-
-                GL.LinkProgram(programID);
-                GL.ValidateProgram(programID);
-
-                GetUniformLocations();
-            }
-
-            private int CompileShader(string source, ShaderType shaderType)
-            {
-                int shaderID = GL.CreateShader(shaderType);
-                GL.ShaderSource(shaderID, source);
-                GL.CompileShader(shaderID);
-
-                string log = GL.GetShaderInfoLog(shaderID);
-
-                if (log != string.Empty)
-                {
-                    Logger.Error(Enum.GetName(typeof(ShaderType), shaderType) + ": " + log);
-                }
-
-                return shaderID;
-            }
-
-            protected abstract void GetUniformLocations();
-
-            public int GetUniformLocation(string uniformName)
-            {
-                return GL.GetUniformLocation(programID, uniformName);
-            }
-
-            protected abstract void BindAttributes();
-
-            protected void BindAttribute(int attributeIndex, string variableName)
-            {
-                GL.BindAttribLocation(programID, attributeIndex, variableName);
-            }
-
-            private int LoadShader(string shaderPath, ShaderType shaderType)
-            {
-                if (!File.Exists(shaderPath))
-                    throw new FileNotFoundException("Shader not found at '" + shaderPath + "'");
-
-                string shaderSource;
-
-                using (StreamReader reader = new StreamReader(shaderPath, Encoding.UTF8))
-                {
-                    shaderSource = reader.ReadToEnd();
-                }
-
-                int shaderID = GL.CreateShader(shaderType);
-                GL.ShaderSource(shaderID, shaderSource);
-                GL.CompileShader(shaderID);
-
-                string log = GL.GetShaderInfoLog(shaderID);
-
-                if (log != string.Empty)
-                {
-                    Logger.Error(Enum.GetName(typeof(ShaderType), shaderType) + ": " + log);
-                }
-
-                return shaderID;
-            }
-
-            public void Dispose()
-            {
-                Unbind();
-
-                GL.DetachShader(ProgramID, VertexShaderID);
-                GL.DetachShader(ProgramID, FragmentShaderID);
-                GL.DeleteShader(VertexShaderID);
-                GL.DeleteShader(FragmentShaderID);
-                GL.DeleteProgram(ProgramID);
-            }
-
-            #region Uniform Set Functions
-
-            public void SetFloat(int location, float value)
-            {
-                GL.Uniform1(location, value);
-            }
-
-            public void SetBool(int location, bool value)
-            {
-                if (value)
-                    GL.Uniform1(location, 1);
-                else
-                    GL.Uniform1(location, 0);
-            }
-
-            public void SetVector2(int location, Vector2 value)
-            {
-                GL.Uniform2(location, value);
-            }
-
-            public void SetVector3(int location, Vector3 value)
-            {
-                GL.Uniform3(location, value);
-            }
-
-            public void SetMatrix(int location, Matrix4 value)
-            {
-                GL.UniformMatrix4(location, false, ref value);
-            }
-
-            #endregion Uniform Set Functions
-        }
-
-        public enum ShaderSource
-        {
-            Source,
-            Path
-        }
-
-        public ImFontPtr LoadFontFromTTF(string path, float size)
+        public static ImFontPtr LoadFontFromTTF(string path, float size)
         {
             var font = ImGui.GetIO().Fonts.AddFontFromFileTTF(path, size);
             RecreateFontDeviceTexture();
@@ -327,7 +167,7 @@ namespace Fury.ImGUI
             return font;
         }
 
-        public void RecreateFontDeviceTexture()
+        public static void RecreateFontDeviceTexture()
         {
             ImGuiIOPtr io = ImGui.GetIO();
             io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height, out int bytesPerPixel);
@@ -369,71 +209,73 @@ namespace Fury.ImGUI
 
             public void SetMinFilter(TextureMinFilter filter)
             {
-                GL.TextureParameter(ID, TextureParameterName.TextureMinFilter, (int)filter);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)filter);
             }
 
             public void SetMagFilter(TextureMagFilter filter)
             {
-                GL.TextureParameter(ID, TextureParameterName.TextureMagFilter, (int)filter);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)filter);
             }
         }
 
         private static void SetKeyMappings()
         {
             ImGuiIOPtr io = ImGui.GetIO();
-            io.KeyMap[(int)ImGuiKey.Tab] = (int)Key.Tab;
-            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)Key.Left;
-            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)Key.Right;
-            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)Key.Up;
-            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)Key.Down;
-            io.KeyMap[(int)ImGuiKey.PageUp] = (int)Key.PageUp;
-            io.KeyMap[(int)ImGuiKey.PageDown] = (int)Key.PageDown;
-            io.KeyMap[(int)ImGuiKey.Home] = (int)Key.Home;
-            io.KeyMap[(int)ImGuiKey.End] = (int)Key.End;
-            io.KeyMap[(int)ImGuiKey.Delete] = (int)Key.Delete;
-            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Key.BackSpace;
-            io.KeyMap[(int)ImGuiKey.Enter] = (int)Key.Enter;
-            io.KeyMap[(int)ImGuiKey.Escape] = (int)Key.Escape;
-            io.KeyMap[(int)ImGuiKey.A] = (int)Key.A;
-            io.KeyMap[(int)ImGuiKey.C] = (int)Key.C;
-            io.KeyMap[(int)ImGuiKey.V] = (int)Key.V;
-            io.KeyMap[(int)ImGuiKey.X] = (int)Key.X;
-            io.KeyMap[(int)ImGuiKey.Y] = (int)Key.Y;
-            io.KeyMap[(int)ImGuiKey.Z] = (int)Key.Z;
+            io.KeyMap[(int)ImGuiKey.Space] = (int)Keys.Space;
+            io.KeyMap[(int)ImGuiKey.Tab] = (int)Keys.Tab;
+            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)Keys.Left;
+            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)Keys.Right;
+            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)Keys.Up;
+            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)Keys.Down;
+            io.KeyMap[(int)ImGuiKey.PageUp] = (int)Keys.PageUp;
+            io.KeyMap[(int)ImGuiKey.PageDown] = (int)Keys.PageDown;
+            io.KeyMap[(int)ImGuiKey.Home] = (int)Keys.Home;
+            io.KeyMap[(int)ImGuiKey.End] = (int)Keys.End;
+            io.KeyMap[(int)ImGuiKey.Delete] = (int)Keys.Delete;
+            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Keys.Backspace;
+            io.KeyMap[(int)ImGuiKey.Enter] = (int)Keys.Enter;
+            io.KeyMap[(int)ImGuiKey.KeyPadEnter] = (int)Keys.KeyPadEnter;
+            io.KeyMap[(int)ImGuiKey.Escape] = (int)Keys.Escape;
+            io.KeyMap[(int)ImGuiKey.A] = (int)Keys.A;
+            io.KeyMap[(int)ImGuiKey.C] = (int)Keys.C;
+            io.KeyMap[(int)ImGuiKey.V] = (int)Keys.V;
+            io.KeyMap[(int)ImGuiKey.X] = (int)Keys.X;
+            io.KeyMap[(int)ImGuiKey.Y] = (int)Keys.Y;
+            io.KeyMap[(int)ImGuiKey.Z] = (int)Keys.Z;
         }
 
-        private void SetPerFrameImGuiData(float deltaTime, IWindow window)
+        private static void SetPerFrameImGuiData(float deltaTime, IWindow window)
         {
             var io = ImGui.GetIO();
-            io.DisplaySize = new Math.Vector2(window.Width / 1, window.Height/ 1);
-            io.DisplayFramebufferScale = new Math.Vector2(1);
-            if (deltaTime == 0) Console.WriteLine("Error");
+            io.DisplaySize = new Vector2(window.Width / 1, window.Height/ 1).ToVec2();
+            io.DisplayFramebufferScale = new Vector2(1).ToVec2();
             io.DeltaTime = deltaTime;
         }
 
-        public void Begin(double deltaTime, IWindow window)
+        public static void Begin(IWindow window)
         {
             if (frameBegun)
                 ImGui.Render();
 
-            SetPerFrameImGuiData((float)deltaTime, window);
+            SetPerFrameImGuiData(Time.deltaTime, window);
 
             ImGui.NewFrame();
             frameBegun = true;
         }
 
-        public void End()
+        public static void End()
         {
             if (frameBegun)
             {
                 frameBegun = false;
 
                 ImGui.Render();
+                
                 RenderImDrawData(ImGui.GetDrawData());
             }
         }
 
-        private void RenderImDrawData(ImDrawDataPtr data)
+        private static void RenderImDrawData(ImDrawDataPtr data)
         {
             if (data.CmdListsCount == 0) return;
 
@@ -445,7 +287,15 @@ namespace Fury.ImGUI
                 if (vertexSize > vertexBufferSize)
                 {
                     int newSize = (int)MathHelper.Max(vertexBufferSize * 1.5f, vertexSize);
-                    GL.NamedBufferData(vertexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+                    // New Code
+
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
+                    GL.BufferData(BufferTarget.ArrayBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+                    //
+
+                    //GL.NamedBufferData(vertexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                     vertexBufferSize = newSize;
                 }
 
@@ -453,7 +303,15 @@ namespace Fury.ImGUI
                 if (indexSize > indexBufferSize)
                 {
                     int newSize = (int)MathHelper.Max(indexBufferSize * 1.5f, indexSize);
-                    GL.NamedBufferData(indexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+                    // New Code
+
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
+                    GL.BufferData(BufferTarget.ElementArrayBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+                    //
+
+                    //GL.NamedBufferData(indexBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                     indexBufferSize = newSize;
                 }
             }
@@ -469,10 +327,10 @@ namespace Fury.ImGUI
                 1.0f);
 
             shader.Bind();
-            GL.UniformMatrix4(shader.GetUniformLocation("projection_matrix"), false, ref mvp);
-            GL.Uniform1(shader.GetUniformLocation("in_fontTexture"), 0);
+            shader.SetMatrix4("projection_matrix", false, ref mvp);
+            shader.SetInt("in_fontTexture", 0);
 
-            GL.BindVertexArray(vertexArray);
+            vertexArray.Bind();
 
             data.ScaleClipRects(io.DisplayFramebufferScale);
 
@@ -488,9 +346,21 @@ namespace Fury.ImGUI
             {
                 ImDrawListPtr cmd_list = data.CmdListsRange[n];
 
-                GL.NamedBufferSubData(vertexBuffer, IntPtr.Zero, cmd_list.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmd_list.VtxBuffer.Data);
+                // New Code
 
-                GL.NamedBufferSubData(indexBuffer, IntPtr.Zero, cmd_list.IdxBuffer.Size * sizeof(ushort), cmd_list.IdxBuffer.Data);
+                vertexBuffer.SetData(cmd_list.VtxBuffer.Data, cmd_list.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>());
+                indexBuffer.SetData(cmd_list.IdxBuffer.Data, cmd_list.IdxBuffer.Size * sizeof(ushort));
+
+                //GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
+                //GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, cmd_list.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmd_list.VtxBuffer.Data);
+                //
+                //GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
+                //GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, cmd_list.IdxBuffer.Size * sizeof(ushort), cmd_list.IdxBuffer.Data);
+
+                //
+
+                //GL.NamedBufferSubData(vertexBuffer, IntPtr.Zero, cmd_list.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmd_list.VtxBuffer.Data);
+                //GL.NamedBufferSubData(indexBuffer, IntPtr.Zero, cmd_list.IdxBuffer.Size * sizeof(ushort), cmd_list.IdxBuffer.Data);
 
                 int vtx_offset = 0;
                 int idx_offset = 0;
@@ -531,7 +401,7 @@ namespace Fury.ImGUI
             GL.Disable(EnableCap.Blend);
             GL.Disable(EnableCap.ScissorTest);
 
-            GL.BindVertexArray(0);
+            vertexArray.Unbind();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Fury.Core
+﻿namespace Fury
 {
     public class EntryPoint
     {

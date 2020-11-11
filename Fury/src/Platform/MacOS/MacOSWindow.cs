@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Fury.Core;
 using Fury.Events;
-using Fury.Platform.Windows;
-using OpenToolkit.Graphics.OpenGL4;
-using OpenToolkit.Windowing.Desktop;
-using OpenToolkit.Windowing.GraphicsLibraryFramework;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Fury
 {
-    public class MacOSWindow : IWindow
+    public class MacOSWindow : NativeWindow, IWindow
     {
         private WindowData data;
-        private GLFWWindow window;
 
         public MacOSWindow() : this(WindowProperties.Default) { }
 
-        public MacOSWindow(WindowProperties props)
+        public MacOSWindow(WindowProperties props) : base(NativeWindowSettings.Default)
         {
             Init(props);
         }
@@ -28,47 +25,48 @@ namespace Fury
             data.Width = props.Width;
             data.Height = props.Height;
 
-            window = new GLFWWindow(NativeWindowSettings.Default) { Title = props.Title, Size = new OpenToolkit.Mathematics.Vector2i(props.Width, props.Height) };
+            Title = props.Title;
+            Size = new OpenTK.Mathematics.Vector2i(props.Width, props.Height);
             GL.Viewport(0, 0, Width, Height);
 
-            window.Resize += e =>
+            Resize += e =>
             {
                 data.Width = e.Width;
                 data.Height = e.Height;
                 data.EventCallback(new WindowResizeEvent(e.Width, e.Height));
             };
 
-            window.Closing += e =>
+            Closing += e =>
             {
                 data.EventCallback(new WindowCloseEvent());
             };
 
-            window.KeyDown += e =>
+            KeyDown += e =>
             {
                 data.EventCallback(new KeyPressedEvent((int)e.Key, e.Control, e.Alt, e.Shift));
             };
 
-            window.KeyUp += e =>
+            KeyUp += e =>
             {
                 data.EventCallback(new KeyReleasedEvent((int)e.Key, e.Control, e.Alt, e.Shift));
             };
 
-            window.MouseDown += e =>
+            MouseDown += e =>
             {
                 data.EventCallback(new MouseButtonPressedEvent(e.Button));
             };
 
-            window.MouseUp += e =>
+            MouseUp += e =>
             {
                 data.EventCallback(new MouseButtonReleasedEvent(e.Button));
             };
 
-            window.MouseWheel += e =>
+            MouseWheel += e =>
             {
                 data.EventCallback(new MouseScrolledEvent(e.OffsetX, e.OffsetY));
             };
 
-            window.MouseMove += e =>
+            MouseMove += e =>
             {
                 data.EventCallback(new MouseMovedEvent(e.X, e.Y));
             };
@@ -77,18 +75,20 @@ namespace Fury
 
         public object GetNativeWindow()
         {
-            return window;
+            return this;
         }
 
-        public string Title { get => data.Title; set => data.Title = value; }
+        public new string Title { get => data.Title; set => data.Title = value; }
         public int Width { get => data.Width; set => data.Width = value; }
         public int Height { get => data.Height; set => data.Height = value; }
+        public bool Minimised => WindowState == OpenTK.Windowing.Common.WindowState.Minimized;
 
-        public unsafe void* Handle => window.WindowPtr;
+        public unsafe void* Handle => WindowPtr;
 
         public void OnUpdate()
         {
-            window.ProcessEvents();
+            ProcessEvents();
+            unsafe { GLFW.SwapBuffers(WindowPtr); }
         }
 
         public void SetEventCallback(Action<Event> callback)
@@ -98,12 +98,7 @@ namespace Fury
 
         public unsafe void SwapBuffers()
         {
-            GLFW.SwapBuffers(window.WindowPtr);
-        }
-
-        public void Dispose()
-        {
-            window.Dispose();
+            GLFW.SwapBuffers(WindowPtr);
         }
 
         public struct WindowData

@@ -1,14 +1,19 @@
-﻿using Fury.Core;
+﻿using Fury;
 using Fury.Events;
-using Fury.Math;
+using Fury.Rendering;
 using Fury.Utils;
 
 using ImGuiNET;
 
-using OpenToolkit.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL4;
 
 using System;
 using System.Collections.Generic;
+
+using Vector3 = System.Numerics.Vector3;
+using Vector2 = System.Numerics.Vector2;
+using System.Numerics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Sandbox
 {
@@ -21,20 +26,96 @@ namespace Sandbox
         private int windowWidth;
         private int windowHeight;
 
+        VertexBuffer vertexBuffer;
+        IndexBuffer indexBuffer;
+        VertexArray vertexArray;
+        Shader shader;
+
+        public OrthographicCamera orthoCamera;
+        public PerspectiveCamera persCamera;
+
+        public Camera selectedCamera;
+        int selectedCameraIndex;
+
+        Vector3 trianglePos;
+
+        private bool EnableDeltaTime = true;
+
         public EditorLayer() : base("EditorLayer") { }
 
         public override void OnAttach()
         {
             app = Application.GetApplication();
+            var window = app.GetWindow();
+
+            orthoCamera = new OrthographicCamera(-16f, 16f, -9f, 9f);
+            persCamera = new PerspectiveCamera(70, 16/9, 0.01f, 1000);
+
+            selectedCamera = orthoCamera;
+
+            float[] verticies =
+            {
+                -0.5f, -0.5f,  0.0f, /* Colors */ 1.0f, 0.0f, 0.0f,
+                 0.5f, -0.5f,  0.0f, /* Colors */ 0.0f, 1.0f, 0.0f,
+                 0.0f,  0.5f,  0.0f, /* Colors */ 0.0f, 0.0f, 1.0f,
+            };
+
+            uint[] indices =
+            {
+                0, 1, 2
+            };
+
+            shader = new Shader("Assets/Shaders/vertex.glsl", "Assets/Shaders/fragment.glsl", true);
+
+            vertexBuffer = new VertexBuffer(verticies, verticies.Length * sizeof(float));
+            indexBuffer = new IndexBuffer(indices, indices.Length * sizeof(uint));
+
+            BufferLayout layout = new BufferLayout(
+                new BufferElement("positions", ShaderDataType.Float3),
+                new BufferElement("colors", ShaderDataType.Float3)
+            );
+
+            vertexBuffer.SetLayout(layout);
+
+            vertexArray = new VertexArray();
+            vertexArray.AddVertexBuffer(vertexBuffer);
+            vertexArray.SetIndexBuffer(indexBuffer);
         }
 
         public override void OnDettach()
         {
-            base.OnDettach();
+            
         }
 
-        public override void OnUpdate(double elapsed)
+        public override void OnUpdate()
         {
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.A))
+                selectedCamera.Position += new OpenTK.Mathematics.Vector3(1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.D))
+                selectedCamera.Position += new OpenTK.Mathematics.Vector3(-1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.W))
+                selectedCamera.Position += new OpenTK.Mathematics.Vector3(0, 0, 1) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.S))
+                selectedCamera.Position += new OpenTK.Mathematics.Vector3(0, 0, -1) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Left))
+                trianglePos += new Vector3(-1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Right))
+                trianglePos += new Vector3(1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Up))
+                trianglePos += new Vector3(0, 1, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Down))
+                trianglePos += new Vector3(0, -1, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
+
+            Renderer.Clear();
+
+            Renderer.BeginScene(ref selectedCamera);
+
+
+
+            Renderer.Submit(vertexArray, shader, OpenTK.Mathematics.Matrix4.CreateTranslation(trianglePos.ToVec3()));
+
+            Renderer.EndScene();
         }
 
         private static bool useDocking = true;
@@ -46,8 +127,16 @@ namespace Sandbox
 
         public override void OnImGuiRender()
         {
-            var windowFlags = ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoBringToFrontOnFocus;
-            var dockspaceFlags = ImGuiDockNodeFlags.None;
+            var windowFlags = ImGuiWindowFlags.MenuBar 
+                            | ImGuiWindowFlags.NoDocking 
+                            | ImGuiWindowFlags.NoCollapse 
+                            | ImGuiWindowFlags.NoTitleBar 
+                            | ImGuiWindowFlags.NoResize 
+                            | ImGuiWindowFlags.NoMove 
+                            | ImGuiWindowFlags.NoNav 
+                            | ImGuiWindowFlags.NoBringToFrontOnFocus;
+
+            var dockspaceFlags = ImGuiDockNodeFlags.PassthruCentralNode;
 
             var io = ImGui.GetIO();
 
@@ -57,11 +146,12 @@ namespace Sandbox
                 ImGui.SetNextWindowPos(viewport.Pos);
                 ImGui.SetNextWindowSize(viewport.Size);
                 ImGui.SetNextWindowViewport(viewport.ID);
+                ImGui.SetNextWindowBgAlpha(0);
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
-                ImGui.Begin("Dockspace Demo", ref dockspaceOpen, windowFlags);
+                ImGui.Begin("Dockspace", ref dockspaceOpen, windowFlags);
 
                 ImGui.PopStyleVar();
                 ImGui.PopStyleVar();
@@ -78,7 +168,7 @@ namespace Sandbox
             {
                 if (ImGui.BeginMenu("File"))
                 {
-                    if (ImGui.MenuItem("Close")) Application.GetApplication().OnEvent(new WindowCloseEvent());
+                    if (ImGui.MenuItem("Close")) app.OnEvent(new WindowCloseEvent());
                     ImGui.EndMenu();
                 }
 
@@ -107,9 +197,44 @@ namespace Sandbox
                 ImGui.Text("Title: " + app.GetWindow().Title);
                 ImGui.Text("Width: " + app.GetWindow().Width);
                 ImGui.Text("Height: " + app.GetWindow().Height);
+                ImGui.Checkbox("VSync", ref (app.GetWindow().GetNativeWindow() as WindowsWindow).VSync);
                 ImGui.Separator();
-                ImGui.Text("Object Loader:");
-                ImGui.Separator();
+
+                string[] cameras = { "Orthographic", "Perspective" };
+
+                ImGui.Text("Camera:");
+                ImGui.Combo("Selected Camera", ref selectedCameraIndex, cameras, cameras.Length);
+
+                selectedCamera = selectedCameraIndex == 0 ? orthoCamera : (Camera)persCamera;
+
+                Vector3 pos = new Vector3(selectedCamera.Position.X, selectedCamera.Position.Y, selectedCamera.Position.Z);
+                ImGui.DragFloat3("Camera Position", ref pos);
+                selectedCamera.Position = new OpenTK.Mathematics.Vector3(pos.X, pos.Y, pos.Z);
+
+                Vector3 rot = new Vector3(selectedCamera.Rotation.X, selectedCamera.Rotation.Y, selectedCamera.Rotation.Z);
+                ImGui.DragFloat3("Camera Rotation", ref rot);
+                selectedCamera.Rotation = new OpenTK.Mathematics.Vector3(rot.X, rot.Y, rot.Z);
+
+                ImGui.DragFloat("Camera Speed", ref selectedCamera.Speed);
+
+                ImGui.Checkbox("Enable deltaTime", ref EnableDeltaTime);
+
+                if (ImGui.Button("Create New Window"))
+                {
+                    unsafe 
+                    {
+                        GLFW.WindowHint(WindowHintBool.Maximized, false);
+                        var window = GLFW.CreateWindow(200, 600, "Test Window", null, null);
+                        GLFW.SetWindowAttrib(window, WindowAttribute.Resizable, true);
+                        GLFW.SetWindowAttrib(window, WindowAttribute.Floating, false);
+                        GLFW.SetWindowAttrib(window, WindowAttribute.Decorated, true);
+                    }
+                }
+
+                var clearColor = Renderer.GetClearColor();
+                ImGui.ColorPicker4("Clear Color", ref clearColor);
+                Renderer.SetClearColor(clearColor);
+
                 ImGui.End();
             }
 
@@ -118,7 +243,7 @@ namespace Sandbox
             {
                 ImGui.Begin("Console", ref showConsoleWindow);
 
-                Action<Event> logCallback = Application.GetApplication().OnEvent;
+                Action<Event> logCallback = app.OnEvent;
 
                 if (ImGui.Button("Info Log Test")) logCallback(new ConsoleLoggedEvent(new Log("Info Log", Severity.Info)));
                 ImGui.SameLine();
@@ -152,6 +277,8 @@ namespace Sandbox
             //Dockspace End
             if (useDocking) ImGui.End();
         }
+
+        #region Events
 
         public override void OnEvent(Event e)
         {
@@ -223,6 +350,7 @@ namespace Sandbox
         {
             windowHeight = e.Height;
             windowWidth = e.Width;
+            ImGui.GetIO().DisplaySize = new System.Numerics.Vector2(e.Width, e.Height);
             return false;
         }
 
@@ -232,5 +360,6 @@ namespace Sandbox
             return false;
         }
 
+        #endregion
     }
 }
