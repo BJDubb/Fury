@@ -49,7 +49,7 @@ namespace Sandbox
             var window = app.GetWindow();
 
             orthoCamera = new OrthographicCamera(-16f, 16f, -9f, 9f);
-            persCamera = new PerspectiveCamera(70, 16/9, 0.01f, 1000);
+            persCamera = new PerspectiveCamera(70, 16/9, 0.0001f, 1000);
 
             selectedCamera = orthoCamera;
 
@@ -89,22 +89,22 @@ namespace Sandbox
 
         public override void OnUpdate()
         {
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.A))
+            if (Input.IsKeyPressed(Key.A))
                 selectedCamera.Position += new OpenTK.Mathematics.Vector3(1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.D))
+            if (Input.IsKeyPressed(Key.D))
                 selectedCamera.Position += new OpenTK.Mathematics.Vector3(-1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.W))
+            if (Input.IsKeyPressed(Key.W))
                 selectedCamera.Position += new OpenTK.Mathematics.Vector3(0, 0, 1) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.S))
+            if (Input.IsKeyPressed(Key.S))
                 selectedCamera.Position += new OpenTK.Mathematics.Vector3(0, 0, -1) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
 
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Left))
+            if (Input.IsKeyPressed(Key.Left))
                 trianglePos += new Vector3(-1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Right))
+            if (Input.IsKeyPressed(Key.Right))
                 trianglePos += new Vector3(1, 0, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Up))
+            if (Input.IsKeyPressed(Key.Up))
                 trianglePos += new Vector3(0, 1, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
-            if (Input.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Down))
+            if (Input.IsKeyPressed(Key.Down))
                 trianglePos += new Vector3(0, -1, 0) * selectedCamera.Speed * (EnableDeltaTime ? Time.deltaTime : 1);
 
             Renderer.Clear();
