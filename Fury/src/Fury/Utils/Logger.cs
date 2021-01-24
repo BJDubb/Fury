@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Fury.Events;
 
@@ -7,6 +8,8 @@ namespace Fury.Utils
 {
     public class Logger
     {
+        public static List<Log> Logs = new List<Log>();
+
         public const string format = "HH:mm:ss";
 
         public static void Info(string msg)
@@ -16,6 +19,8 @@ namespace Fury.Utils
             Console.Write(" [INFO] ");
             Console.Write(msg + "\n");
             Console.ForegroundColor = ConsoleColor.White;
+
+            Logs.Add(new Log(msg, Severity.Info));
         }
 
         public static void Warn(string msg)
@@ -27,6 +32,8 @@ namespace Fury.Utils
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(msg + "\n");
             Console.ForegroundColor = ConsoleColor.White;
+
+            Logs.Add(new Log(msg, Severity.Warn));
         }
 
         public static void Error(string msg)
@@ -38,6 +45,8 @@ namespace Fury.Utils
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(msg + "\n");
             Console.ForegroundColor = ConsoleColor.White;
+
+            Logs.Add(new Log(msg, Severity.Error));
         }
     }
 

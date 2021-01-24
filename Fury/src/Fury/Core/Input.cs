@@ -2,7 +2,7 @@
 
 namespace Fury
 {
-    public class Input
+    public static class Input
     {
         public static bool IsKeyPressed(Key key)
         {

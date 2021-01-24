@@ -10,8 +10,6 @@ namespace Fury.Rendering
 
         public Matrix4 ViewMatrix = Matrix4.Identity;
 
-        public Matrix4 ViewProjectionMatrix = Matrix4.Identity;
-
         protected Vector3 position;
         public Vector3 Position { get => position; set { position = value; RecalculateViewMatrix(); } }
 
@@ -28,7 +26,6 @@ namespace Fury.Rendering
                                 Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(-rotation.Z));
 
             ViewMatrix = transform.Inverted();
-            ViewProjectionMatrix = ViewMatrix * ProjectionMatrix;
         }
     }
 
@@ -37,8 +34,11 @@ namespace Fury.Rendering
         public OrthographicCamera(float left, float right, float bottom, float top)
         {
             ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(left, right, bottom, top, -1, 1);
+        }
 
-            ViewProjectionMatrix = ViewMatrix * ProjectionMatrix;
+        public void SetProjection(float left, float right, float bottom, float top)
+        {
+            ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(left, right, bottom, top, -1, 1);
         }
     }
 
@@ -47,8 +47,11 @@ namespace Fury.Rendering
         public PerspectiveCamera(float fov, float aspect, float near, float far)
         {
             ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(fov), aspect, near, far);
+        }
 
-            ViewProjectionMatrix = ViewMatrix * ProjectionMatrix;
+        public void SetProjection(float fov, float aspect, float near, float far)
+        {
+            ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(fov), aspect, near, far);
         }
     }
 }

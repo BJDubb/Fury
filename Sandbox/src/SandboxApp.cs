@@ -1,12 +1,12 @@
 ﻿using Fury;
 
-namespace Sandbox
+namespace FuryEditor
 {
-    public class Sandbox : Application
+    public class FuryEditor : Application
     {
         static void Main(string[] args)
         {
-            var app = EntryPoint.CreateApplication(new Sandbox());
+            var app = EntryPoint.CreateApplication(new FuryEditor());
             app.PushLayer(new EditorLayer());
             app.Run();
         }

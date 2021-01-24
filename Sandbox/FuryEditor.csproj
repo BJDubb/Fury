@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
   <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   <StartupObject></StartupObject>
   <SignAssembly>false</SignAssembly>
+  <AssemblyName>FuryEditor</AssemblyName>
+  <RootNamespace>FuryEditor</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -21,12 +23,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoStdLib>false</NoStdLib>
     <WarningLevel>4</WarningLevel>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Assets\Shaders\fragment.glsl" />
     <None Remove="Assets\Shaders\vertex.glsl" />
+    <None Remove="Assets\Textures\Checkerboard.png" />
+    <None Remove="Assets\Textures\ChernoLogo.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,10 +40,18 @@
     <Content Include="Assets\Shaders\vertex.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\Textures\Checkerboard.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\ChernoLogo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Fury\Fury.csproj" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties properties_4launchsettings_1json__JsonSchema="FuryEditor" /></VisualStudio></ProjectExtensions>
 
 </Project>

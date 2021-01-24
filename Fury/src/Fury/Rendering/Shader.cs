@@ -2,6 +2,7 @@
 using OpenTK.Mathematics;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Fury.Rendering
@@ -85,15 +86,27 @@ namespace Fury.Rendering
             GL.UseProgram(0);
         }
 
+        Dictionary<string, int> uniformLocations = new Dictionary<string, int>(); 
+
         public int GetUniformLocation(string uniform)
         {
-            return GL.GetUniformLocation(this, uniform);
+            if (!uniformLocations.ContainsKey(uniform))
+            {
+                uniformLocations[uniform] = GL.GetUniformLocation(this, uniform);
+            }
+            return uniformLocations[uniform];
         }
 
         public void SetInt(string name, int data)
         {
             Bind();
-            GL.Uniform1(GetUniformLocation(name), data);
+
+            if (!uniformLocations.ContainsKey(name))
+            {
+                uniformLocations[name] = GL.GetUniformLocation(this, name);
+            }
+
+            GL.Uniform1(uniformLocations[name], data);
         }
 
         public void SetMatrix4(string name, bool transpose, ref Matrix4 data)

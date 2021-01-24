@@ -1,4 +1,12 @@
-﻿namespace Fury.Utils
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.PixelFormats;
+
+using System;
+using System.IO;
+
+namespace Fury.Utils
 {
     public static class Extensions
     {

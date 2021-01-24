@@ -37,6 +37,13 @@ namespace Fury.Rendering
         {
             this.Bind();
             Size += size;
+            GL.BufferData(BufferTarget.ArrayBuffer, size, data, BufferUsageHint.DynamicDraw);
+        }
+
+        public void SetSubData(IntPtr data, int size)
+        {
+            this.Bind();
+            Size += size;
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, size, data);
         }
 

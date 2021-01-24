@@ -1,12 +1,16 @@
 ﻿using Fury;
 using Fury.Events;
-using Fury.ImGUI;
 using Fury.Utils;
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Fury.Rendering;
+using System.Diagnostics;
+using OpenTK.Graphics.OpenGL4;
+using Fury.GUI;
+using System.Threading;
+using OpenTK.Windowing.Desktop;
 
 namespace Fury
 {
@@ -37,8 +41,6 @@ namespace Fury
             Logger.Info("Welcome to the Fury Engine!");
             Logger.Info("Platform: " + RuntimeInformation.OSDescription);
 
-            Renderer.SetClearColor(Color.Black.ToVec4());
-
             ImGuiController.Init(window);
 
             while (running)
@@ -62,6 +64,7 @@ namespace Fury
                         layer.OnImGuiRender();
                     }
                     ImGuiController.End();
+
                 }
 
                 window.OnUpdate();
