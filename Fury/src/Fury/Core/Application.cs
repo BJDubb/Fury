@@ -22,6 +22,8 @@ namespace Fury
         private bool running = true;
         double lastFrameTime;
 
+        private Thread updateThread;
+
         public Application()
         {
             Core.GetPlatform();
